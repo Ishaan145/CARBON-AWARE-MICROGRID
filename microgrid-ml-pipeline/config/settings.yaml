@@ -1,0 +1,163 @@
+# Carbon-Aware Microgrid Pipeline Configuration
+
+# Model Configuration
+models:
+  deepar:
+    path: models/binaries/deepar_model.pt
+    version: "1.0.0"
+    input_size: 1
+    hidden_size: 64
+    prediction_horizon: 96  # 24 hours at 15-min intervals
+    context_length: 96      # 24 hours history
+    
+  lstm:
+    path: models/binaries/lstm_model.pt
+    version: "1.0.0"
+    hidden_size: 128
+    num_layers: 2
+    dropout: 0.2
+    
+  xgboost:
+    path: models/binaries/xgboost_model.json
+    version: "1.0.0"
+    quantiles: [0.1, 0.5, 0.9]
+
+# Ensemble Configuration
+ensemble:
+  method: "weighted_quantile"  # Options: weighted_quantile, stacking
+  weights_path: config/ensemble_weights.yaml
+  
+# Feature Engineering
+features:
+  lag_periods: [1, 2, 3, 4, 6, 12, 24, 48, 96]  # 15min, 30min, ..., 24hr
+  rolling_windows: [4, 12, 24, 96]  # 1hr, 3hr, 6hr, 24hr
+  cyclic_encodings:
+    - hour_of_day
+    - day_of_week
+    - day_of_month
+  weather_features:
+    - temperature
+    - irradiance
+    - cloud_cover
+  normalization: "standard"  # Options: standard, minmax, robust
+
+# Data Configuration
+data:
+  source: "synthetic"  # Options: synthetic, postgresql, api, mqtt
+  interval_minutes: 15
+  timezone: "UTC"
+  
+  # PostgreSQL (if source=postgresql)
+  database:
+    host: "localhost"
+    port: 5432
+    database: "microgrid"
+    user: "postgres"
+    password: "password"
+    
+  # MQTT (if source=mqtt)
+  mqtt:
+    broker: "localhost"
+    port: 1883
+    topics:
+      solar: "sensors/solar/power"
+      load: "sensors/load/power"
+      battery: "sensors/battery/soc"
+      
+# Optimization Configuration
+optimization:
+  enabled: true
+  method: "mpc"  # Options: mpc, rule_based, rl
+  
+  mpc:
+    horizon: 96  # 24 hours
+    control_interval: 1  # 15 minutes
+    solver: "cvxpy"  # Options: cvxpy, pyomo
+    
+  battery:
+    capacity_kwh: 10.0
+    max_charge_rate_kw: 3.0
+    max_discharge_rate_kw: 3.0
+    charge_efficiency: 0.95
+    discharge_efficiency: 0.95
+    soc_min: 10.0  # percentage
+    soc_max: 95.0  # percentage
+    
+  objective:
+    minimize_carbon: true
+    carbon_weight: 0.7
+    cost_weight: 0.3
+    degradation_penalty: 0.01
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  title: "Carbon-Aware Microgrid ML API"
+  version: "1.0.0"
+  debug: false
+  workers: 4
+  
+  # CORS
+  cors:
+    enabled: true
+    origins: ["*"]
+    
+  # Rate limiting
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+    
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "json"  # json, text
+  file: "logs/pipeline.log"
+  
+# Monitoring
+monitoring:
+  enabled: true
+  
+  # Model drift detection
+  drift_detection:
+    enabled: true
+    psi_threshold: 0.2
+    check_interval_hours: 24
+    
+  # Performance metrics
+  metrics:
+    latency_threshold_ms: 100
+    error_rate_threshold: 0.05
+
+# Synthetic Data Generator (for testing)
+synthetic:
+  location:
+    latitude: 28.6139
+    longitude: 77.2090
+    timezone: "Asia/Kolkata"
+    
+  solar:
+    panel_efficiency: 0.20
+    panel_area_m2: 20.0
+    temp_coefficient: -0.004
+    
+  load:
+    base_kw: 2.0
+    peak_multiplier: 1.5
+    weekend_reduction: 0.5
+    temp_sensitivity: 0.1
+    
+  grid:
+    base_co2_intensity: 800  # gCO2/kWh
+    variability: 100
+
+# Cache Configuration
+cache:
+  enabled: true
+  backend: "redis"  # Options: redis, memory
+  ttl_seconds: 300
+  
+  redis:
+    host: "localhost"
+    port: 6379
+    db: 0

@@ -1,0 +1,50 @@
+# Ensemble Model Weights Configuration
+# These weights are learned via validation performance
+# Update after cross-validation or backtesting
+
+# Quantile 0.1 (10th percentile - conservative lower bound)
+q10:
+  deepar: 0.50
+  lstm: 0.25
+  xgboost: 0.25
+
+# Quantile 0.5 (median - point forecast)
+q50:
+  deepar: 0.40
+  lstm: 0.30
+  xgboost: 0.30
+
+# Quantile 0.9 (90th percentile - conservative upper bound)
+q90:
+  deepar: 0.45
+  lstm: 0.30
+  xgboost: 0.25
+
+# Time-decay weighting (optional)
+# Weights can vary by forecast horizon
+time_decay:
+  enabled: false
+  decay_rate: 0.95
+  
+# Adaptive weighting (optional)
+# Adjust weights based on recent performance
+adaptive:
+  enabled: false
+  window_size: 1000  # number of recent predictions
+  update_interval_hours: 24
+  
+# Performance thresholds for model gating
+# If a model performs below threshold, reduce its weight
+gating:
+  enabled: true
+  min_weight: 0.05
+  metrics:
+    deepar:
+      min_pinball_loss: 0.8
+      min_crps: 1.5
+    lstm:
+      min_mae: 0.5
+      min_rmse: 0.8
+    xgboost:
+      min_mae: 0.5
+      min_quantile_score: 0.7

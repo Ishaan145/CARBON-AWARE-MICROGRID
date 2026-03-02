@@ -1,0 +1,40 @@
+{
+  "model_type": "XGBoost",
+  "version": "1.0.0",
+  "framework": "xgboost",
+  "hyperparameters": {
+    "n_estimators": 100,
+    "max_depth": 6,
+    "learning_rate": 0.1,
+    "objective": "reg:quantileerror",
+    "alpha": [
+      0.1,
+      0.5,
+      0.9
+    ]
+  },
+  "feature_names": [
+    "lag_1",
+    "lag_2",
+    "lag_4",
+    "lag_12",
+    "lag_24",
+    "lag_48",
+    "rolling_mean_4",
+    "rolling_mean_12",
+    "rolling_std_4",
+    "hour_sin",
+    "hour_cos",
+    "day_sin",
+    "day_cos",
+    "temperature",
+    "irradiance",
+    "cloud_cover",
+    "weekend",
+    "co2_intensity"
+  ],
+  "num_features": 18,
+  "trained_on": "2024-02-14",
+  "placeholder": true,
+  "note": "Replace with actual XGBoost model file (.json or .pkl)"
+}
